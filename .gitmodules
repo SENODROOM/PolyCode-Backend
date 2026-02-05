@@ -10,3 +10,6 @@
 [submodule "Console Based Simple Calculator"]
 	path = Console Based Simple Calculator
 	url = https://github.com/SENODROOM/Console-Based-Simple-Calculator-Cpp.git
+[submodule "LeetCode"]
+	path = LeetCode
+	url = https://github.com/SENODROOM/LeetCode-in-Cplusplus.git
