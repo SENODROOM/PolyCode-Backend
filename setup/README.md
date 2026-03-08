@@ -9,7 +9,7 @@ Get your C environment running and compile your first program.
 
 ## Practice
 ```bash
-cd "learning-guide/setup"
+cd "setup"
 gcc "first_program.c" -o first_program
 ./first_program
 ```
