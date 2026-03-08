@@ -323,3 +323,25 @@ exit /b 0
 - [Intermediate](../02_Intermediate/) - Build your skills
 - [Advanced](../03_Advanced/) - Master complex techniques
 - [Command Reference](../04_Reference/) - Complete command documentation
+
+## Runnable Folder Examples
+
+### Beginner (`Examples/Beginner`)
+- `hello world.bat`
+- `user input and greeting.bat`
+- `simple calculator.bat`
+
+### Intermediate (`Examples/Intermediate`)
+- `menu driven tool.bat`
+- `file backup copy.bat`
+- `logging helper.bat`
+
+### Advanced (`Examples/Advanced`)
+- `recursive cleaner.bat`
+- `error handling pattern.bat`
+- `argument parser.bat`
+
+### Real World (`Examples/Real World`)
+- `daily project backup.bat`
+- `system health report.bat`
+- `bulk rename by extension.bat`
