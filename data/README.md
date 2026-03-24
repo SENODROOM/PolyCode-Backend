@@ -47,6 +47,56 @@ Covers:
 - Mathematical algorithms
 - Optimization techniques
 
+**Paired files**: Code + detailed documentation together
+
+### 🏋️ exercises/
+**Practice Problems and Exercises**
+
+Topics include:
+- Basic programming exercises (factorial, fibonacci, primes)
+- Array manipulation problems
+- String processing challenges
+- Mathematical computations
+- Problem-solving practice
+
+**Paired files**: Exercise solutions + explanations
+
+### 💡 examples/
+**Focused Code Examples**
+
+Demonstrates:
+- String operations and manipulation
+- Pointer basics and advanced usage
+- Memory management examples
+- Input/output operations
+- Common programming patterns
+
+**Paired files**: Working examples + detailed explanations
+
+### 🛠️ utilities/
+**Helper Functions and Utilities**
+
+Contains:
+- Common utility functions (strings, arrays, math)
+- Input validation helpers
+- File operation utilities
+- Memory management tools
+- Debugging and testing helpers
+
+**Paired files**: Reusable code + usage documentation
+
+### 🧪 testing/
+**Test Frameworks and Validation**
+
+Provides:
+- Simple test framework implementation
+- Assertion macros and test suites
+- Unit testing examples
+- Performance testing tools
+- Memory leak detection helpers
+
+**Paired files**: Testing code + framework documentation
+
 ### ⚡ advanced_topics/
 **Advanced C Concepts**
 
@@ -84,11 +134,17 @@ Start: core_concepts/
   ↓
 Learn: Variables, I/O, control flow
   ↓
-Progress: data_structures/
+Practice: exercises/
+  ↓
+Study: algorithms/, examples/
   ↓
 Apply: projects/
   ↓
 Advanced: advanced_topics/
+  ↓
+Test: testing/
+  ↓
+Reuse: utilities/
 ```
 
 ## 📊 File Organization
@@ -97,7 +153,11 @@ Advanced: advanced_topics/
 |----------|---------|-------|----------|
 | core_concepts/ | Learn C basics | `.c` + `.md` pairs | Input_Output_and_Control_Flow |
 | data_structures/ | Understand data structures | `.c` + `.md` pairs | Linked_Lists, Stacks_and_Queues |
-| algorithms/ | Study algorithms | Code implementations | Sorting algorithms |
+| algorithms/ | Study algorithms | Code + explanations | Sorting_Algorithms, Searching_Algorithms |
+| exercises/ | Practice programming | Exercise solutions | Basic_Programming_Exercises, Array_Manipulation |
+| examples/ | See focused examples | Working code | String_Operations, Pointer_Basics |
+| utilities/ | Use helper functions | Reusable code | Common_Utility_Functions |
+| testing/ | Test and validate | Test frameworks | Simple_Test_Framework |
 | advanced_topics/ | Master advanced concepts | Code + explanations | Pointers_and_Memory_Management |
 | projects/ | See real applications | Complete projects | Calculator, Expense_Tracker |
 
