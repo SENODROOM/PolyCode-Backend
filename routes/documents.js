@@ -105,7 +105,47 @@ async function resolvePythonCommand() {
 async function executePythonCode(code, stdin = '') {
   const command = await resolvePythonCommand();
   const [cmd, ...baseArgs] = command.split(' ');
-  const args = [...baseArgs, '-c', code];
+  const autoInputPrelude = `
+import builtins, re
+
+def __polycode_auto_input(prompt=''):
+    p = '' if prompt is None else str(prompt).lower()
+    # yes/no prompts
+    if 'y/n' in p or 'y / n' in p or re.search(r'\\by/n\\b', p):
+        return 'n'
+    # menu/choice prompts
+    if 'select' in p or 'choice' in p or 'option' in p or re.search(r'\\(1\\s*-\\s*\\d+\\)', p):
+        return '1'
+    # common values
+    if 'password' in p:
+        return 'password'
+    if 'name' in p:
+        return 'Bob'
+    if 'id' in p:
+        return '1'
+    if 'url' in p:
+        return 'http://example.com'
+    if 'command' in p:
+        return 'echo hello'
+    if 'file' in p or 'filename' in p or 'path' in p:
+        return 'input.txt'
+    if 'directory' in p or 'folder' in p:
+        return '.'
+    if 'target host' in p or 'host' in p:
+        return 'localhost'
+    if 'port' in p:
+        return '80'
+    if 'age' in p:
+        return '20'
+    # numeric-ish
+    if re.search(r'(age|hours|minutes|rpm|degrees|score|rate|amount|quantity|number)', p):
+        return '0'
+    return ''
+
+builtins.input = __polycode_auto_input
+`;
+
+  const args = [...baseArgs, '-c', `${autoInputPrelude}\n${code}`];
 
   return new Promise(async (resolve, reject) => {
     let child;
