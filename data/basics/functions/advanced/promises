@@ -1,0 +1,14 @@
+# Promises
+
+Handle asynchronous operations.
+
+## Example
+```javascript
+let promise = new Promise((resolve) => {
+    resolve("Done");
+});
+
+promise.then(result => console.log(result));
+Practice
+
+Create a promise that resolves after 2 seconds.
