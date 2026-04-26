@@ -146,7 +146,7 @@ app.get("/api-docs", (req, res) => {
 });
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
-const documentRoutes = require("./src/modules/documents/documents.route");
+const documentRoutes = require("./src/modules/documents/documents.router");
 app.use("/api/documents", documentRoutes);
 
 const playgroundRoutes = require("./src/modules/playground/playground.route");
