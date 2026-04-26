@@ -42,6 +42,13 @@ function validateExecutionRequest(language, code) {
     };
   }
 
+  if (code.length > 50_000) {
+    return {
+      valid: false,
+      error: "Code is too large. Maximum allowed size is 50,000 characters.",
+    };
+  }
+
   const supportedLanguages = ["javascript", "python", "js", "py"];
   if (!supportedLanguages.includes(language.toLowerCase())) {
     return {

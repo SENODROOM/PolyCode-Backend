@@ -1,7 +1,23 @@
+const fs = require("fs").promises;
+const path = require("path");
+const crypto = require("crypto");
 const { spawn } = require("child_process");
-const { RUN_TIMEOUT_MS, PYTHON_DATA_PATH } = require("../config/constants");
+const {
+  RUN_TIMEOUT_MS,
+  PYTHON_DATA_PATH,
+  RUNTIME_TMP_PATH,
+  MAX_EXEC_OUTPUT_BYTES,
+} = require("../config/constants");
 
 let resolvedPythonCommand = null;
+
+function appendWithCap(current, chunk) {
+  if (current.length >= MAX_EXEC_OUTPUT_BYTES) return current;
+  const next = current + chunk;
+  return next.length > MAX_EXEC_OUTPUT_BYTES
+    ? next.slice(0, MAX_EXEC_OUTPUT_BYTES)
+    : next;
+}
 
 /**
  * Run a command using spawn and wait for it to spawn
@@ -126,10 +142,10 @@ builtins.input = __polycode_auto_input
     }, RUN_TIMEOUT_MS);
 
     child.stdout.on("data", (chunk) => {
-      stdout += chunk.toString();
+      stdout = appendWithCap(stdout, chunk.toString());
     });
     child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
+      stderr = appendWithCap(stderr, chunk.toString());
     });
     child.on("error", (e) => {
       clearTimeout(timer);
@@ -159,23 +175,58 @@ builtins.input = __polycode_auto_input
  * @returns {Promise<Object>} Execution result
  */
 async function executeJavaScriptCode(code) {
-  return new Promise((resolve) => {
+  await fs.mkdir(RUNTIME_TMP_PATH, { recursive: true });
+  const filename = `run_${crypto.randomBytes(8).toString("hex")}.js`;
+  const filepath = path.join(RUNTIME_TMP_PATH, filename);
+
+  await fs.writeFile(filepath, code, "utf8");
+
+  return new Promise(async (resolve, reject) => {
+    let child;
     try {
-      const result = eval(code);
-      resolve({
-        stdout: String(result),
-        stderr: "",
-        error: null,
-        exitCode: 0,
+      child = await runSpawn("node", [filepath], {
+        cwd: RUNTIME_TMP_PATH,
+        env: { ...process.env },
+        stdio: ["pipe", "pipe", "pipe"],
       });
-    } catch (error) {
-      resolve({
-        stdout: "",
-        stderr: error.message,
-        error: error.message,
-        exitCode: 1,
-      });
+    } catch (e) {
+      await fs.unlink(filepath).catch(() => {});
+      reject(e);
+      return;
     }
+
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+    }, RUN_TIMEOUT_MS);
+
+    child.stdout.on("data", (chunk) => {
+      stdout = appendWithCap(stdout, chunk.toString());
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr = appendWithCap(stderr, chunk.toString());
+    });
+
+    child.on("error", async (e) => {
+      clearTimeout(timer);
+      await fs.unlink(filepath).catch(() => {});
+      reject(e);
+    });
+
+    child.on("close", async (code) => {
+      clearTimeout(timer);
+      await fs.unlink(filepath).catch(() => {});
+      resolve({
+        stdout: stdout.trimEnd(),
+        stderr: stderr.trimEnd(),
+        error:
+          code === 0
+            ? null
+            : stderr.trimEnd() || `Node exited with code ${code}`,
+        exitCode: code,
+      });
+    });
   });
 }
 
