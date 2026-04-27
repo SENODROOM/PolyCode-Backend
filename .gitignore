@@ -9,7 +9,7 @@ node_modules
 /coverage
 /coverage/
 
-# make-folder-txt
-.txtconfig
-.txtignore
-backend.txt
+
+/.txtconfig
+/.txtignore
+/backend.txt
