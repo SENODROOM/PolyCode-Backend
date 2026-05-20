@@ -3,6 +3,12 @@ const router = express.Router();
 const Challenge = require('../models/challenge');
 const Submission = require('../models/submission');
 const User = require('../modules/auth/models/User');
+const { 
+    executePythonCode, 
+    executeJavaScriptCode,
+    executeJavaCode,
+    executeCppCode 
+} = require('../services/executionService');
 
 // GET today's challenge
 router.get('/today', async (req, res) => {
@@ -16,6 +22,28 @@ router.get('/today', async (req, res) => {
 
     if (!challenge) return res.status(404).json({ message: 'No challenge today' });
     res.json(challenge);
+});
+
+// POST compile/run ad-hoc C++ code for lesson challenges
+// Kept before "/:slug" so Express does not treat "run-cpp" as a slug.
+router.post('/run-cpp', async (req, res) => {
+    try {
+        const { code } = req.body || {};
+        if (!code || typeof code !== 'string') {
+            return res.status(400).json({ message: 'C++ code is required' });
+        }
+
+        const result = await executeCppCode(code);
+        return res.json(result);
+    } catch (error) {
+        console.error('C++ run error:', error);
+        return res.status(500).json({
+            stdout: '',
+            stderr: error.message,
+            error: error.message,
+            exitCode: 1,
+        });
+    }
 });
 
 // GET challenge by slug
@@ -33,13 +61,6 @@ router.get('/', async (req, res) => {
         .select('title slug difficulty tags scheduledDate');
     res.json(challenges);
 });
-
-const { 
-    executePythonCode, 
-    executeJavaScriptCode,
-    executeJavaCode,
-    executeCppCode 
-} = require('../services/executionService');
 
 // POST submit a solution
 router.post('/:id/submit', async (req, res) => {
