@@ -78,6 +78,42 @@ if (swaggerJsdoc) {
 const app = express();
 app.disable("x-powered-by");
 
+const defaultAllowedOrigins = [
+  "https://code.quantumlogicslimited.com",
+  "https://www.code.quantumlogicslimited.com",
+  "https://digital-logics-studio.vercel.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
+
+const allowedOrigins = new Set(
+  [
+    ...defaultAllowedOrigins,
+    ...(process.env.CORS_ORIGINS || "")
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  ].map((origin) => origin.replace(/\/$/, "")),
+);
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow same-origin/server-to-server requests where browsers omit Origin.
+    if (!origin) return callback(null, true);
+
+    const normalizedOrigin = origin.replace(/\/$/, "");
+    if (allowedOrigins.has(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  optionsSuccessStatus: 204,
+};
+
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -100,19 +136,8 @@ if (compression) {
   console.log("✅ Compression enabled");
 }
 
-app.use(
-  cors({
-    origin: [
-      "*",
-      "https://code.quantumlogicslimited.com",
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
