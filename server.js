@@ -114,13 +114,16 @@ const isAllowedOrigin = (origin) => {
 
 const corsOptions = {
   origin(origin, callback) {
-    // Allow same-origin/server-to-server requests where browsers omit Origin.
+    // No Origin: same-origin navigation, curl, health checks — skip CORS reflection.
     if (!origin) return callback(null, true);
 
-    if (!isAllowedOrigin(origin)) {
-      console.warn(`⚠️  CORS origin not in allowlist, allowing anyway: ${origin}`);
+    const normalizedOrigin = origin.replace(/\/$/, "");
+    if (isAllowedOrigin(normalizedOrigin)) {
+      return callback(null, normalizedOrigin);
     }
-    return callback(null, true);
+
+    console.warn(`⚠️  CORS blocked origin: ${origin}`);
+    return callback(new Error(`CORS not allowed for origin: ${origin}`));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -132,28 +135,11 @@ app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "no-referrer");
-  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
   next();
 });
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  res.setHeader("Access-Control-Allow-Origin", origin || "*");
-  res.setHeader("Vary", "Origin");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,DELETE,PATCH,OPTIONS",
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type,Authorization,X-Requested-With",
-  );
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-  next();
-});
+// Single CORS layer (duplicate headers from a second middleware break browsers).
+app.use(cors(corsOptions));
 
 if (compression) {
   app.use(
@@ -168,9 +154,6 @@ if (compression) {
   );
   console.log("✅ Compression enabled");
 }
-
-app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
