@@ -78,10 +78,15 @@ if (swaggerJsdoc) {
 const app = express();
 app.disable("x-powered-by");
 
+function normalizeOrigin(origin = "") {
+  return origin.trim().replace(/\/$/, "");
+}
+
 const defaultAllowedOrigins = [
   "https://code.quantumlogicslimited.com",
   "https://www.code.quantumlogicslimited.com",
   "https://digital-logics-studio.vercel.app",
+  "https://poly-code-frontend-iota.vercel.app",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
 ];
@@ -89,17 +94,21 @@ const defaultAllowedOrigins = [
 const allowedOrigins = new Set(
   [
     ...defaultAllowedOrigins,
+    process.env.FRONTEND_URL,
+    process.env.PROD_FRONTEND_URL,
     ...(process.env.CORS_ORIGINS || "")
       .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean),
-  ].map((origin) => origin.replace(/\/$/, "")),
+  ]
+    .map(normalizeOrigin)
+    .filter(Boolean),
 );
 
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
 
-  const normalizedOrigin = origin.replace(/\/$/, "");
+  const normalizedOrigin = normalizeOrigin(origin);
   let hostname = "";
   try {
     hostname = new URL(normalizedOrigin).hostname;
@@ -114,13 +123,15 @@ const isAllowedOrigin = (origin) => {
 
 const corsOptions = {
   origin(origin, callback) {
-    // Allow same-origin/server-to-server requests where browsers omit Origin.
+    // Server-to-server tools (curl, health checks) omit Origin.
     if (!origin) return callback(null, true);
 
-    if (!isAllowedOrigin(origin)) {
-      console.warn(`⚠️  CORS origin not in allowlist, allowing anyway: ${origin}`);
+    if (isAllowedOrigin(origin)) {
+      return callback(null, normalizeOrigin(origin));
     }
-    return callback(null, true);
+
+    console.warn(`🚫 CORS blocked origin: ${origin}`);
+    return callback(new Error(`CORS: Origin ${origin} is not allowed`));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -133,25 +144,6 @@ app.use((req, res, next) => {
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "no-referrer");
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-  next();
-});
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  res.setHeader("Access-Control-Allow-Origin", origin || "*");
-  res.setHeader("Vary", "Origin");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,DELETE,PATCH,OPTIONS",
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type,Authorization,X-Requested-With",
-  );
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
   next();
 });
 
